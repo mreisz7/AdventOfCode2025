@@ -2,7 +2,7 @@
 
 public static class TestData
 {
-	public static string Day1 = """
+    public static string Day1 = """
 		L68
 		L30
 		R48
@@ -14,4 +14,6 @@ public static class TestData
 		R14
 		L82
 		""";
+
+    public static string Day2 = "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,\r\n1698522-1698528,446443-446449,38593856-38593862,565653-565659,\r\n824824821-824824827,2121212118-2121212124";
 }

@@ -16,12 +16,13 @@
     private readonly int dayNumber = 2;
     string inputData = string.Empty;
     string testData = string.Empty;
-    private int? challenge1Result = null;
-    private int? challenge2Result = null;
+    private long? challenge1Result = null;
+    private long? challenge2Result = null;
 
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day2;
     }
 
     protected override async Task OnInitializedAsync()
@@ -29,12 +30,75 @@
         await LoadData();
     }
 
-    private int Challenge1Solution(string input)
+    private static bool HalvesAreEqual(long value)
     {
-        int accumulator = 0;
+        if (value <= 0)
+        {
+            return false;
+        }
+
+        string numberText = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        long length = numberText.Length;
+
+        if ((length & 1) == 1)
+        {
+            return false;
+        }
+
+        long half = length / 2;
+        string pattern = $"^(\\d{{{half}}})(\\1)$";
+
+        try
+        {
+            return System.Text.RegularExpressions.Regex.IsMatch(numberText, pattern, System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromMilliseconds(100));
+        }
+        catch (System.Text.RegularExpressions.RegexMatchTimeoutException)
+        {
+            return false;
+        }
+    }
+
+    private long Challenge1Solution(string input)
+    {
+        long accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split(",");
+        List<(long lowerBound, long upperBound)> ranges = [];
+
+        // Get the range bounds
+        foreach (string range in parsedInputData)
+        {
+            var bounds = range.Split("-");
+            if (bounds.Length != 2)
+            {
+                continue;
+            }
+
+            string first = bounds[0].Trim();
+            string second = bounds[1].Trim();
+
+            // Check: first element length is odd AND second element length equals first
+            // These ranges cannot possibly contain a number with equal halves, so don't add them
+            if ((first.Length & 1) == 1 && second.Length == first.Length)
+            {
+                continue;
+            }
+
+            ranges.Add((long.Parse(first), long.Parse(second)));
+        }
+
+        // Loop through the ranges and check for numbers where the halves match
+        foreach (var range in ranges)
+        {
+            for (long i = range.lowerBound; i <= range.upperBound; i++)
+            {
+                if (HalvesAreEqual(i))
+                {
+                    accumulator += i;
+                }
+            }
+        }
 
         return accumulator;
     }
@@ -54,13 +118,62 @@
         }
     }
 
-    // Challenge 2
-    private int Challenge2Solution(string input)
+    private static bool HasRepeatingPattern(long value)
     {
-        int accumulator = 0;
+        if (value <= 0)
+        {
+            return false;
+        }
+
+        string numberText = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        // Match any sequence of digits that repeats two or more times
+        // Example: 1212, 777, 123123123
+        string pattern = @"^(\d+)\1+$";
+
+        try
+        {
+            return System.Text.RegularExpressions.Regex.IsMatch(numberText, pattern, System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromMilliseconds(100));
+        }
+        catch (System.Text.RegularExpressions.RegexMatchTimeoutException)
+        {
+            return false;
+        }
+    }
+
+
+    // Challenge 2
+    private long Challenge2Solution(string input)
+    {
+        long accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split(",");
+        List<(long lowerBound, long upperBound)> ranges = [];
+
+        // Get the range bounds
+        foreach (string range in parsedInputData)
+        {
+            var bounds = range.Split("-");
+            if (bounds.Length != 2)
+            {
+                continue;
+            }
+
+            ranges.Add((long.Parse(bounds[0].Trim()), long.Parse(bounds[1].Trim())));
+        }
+
+        // Loop through the ranges and check for numbers where the halves match
+        foreach (var range in ranges)
+        {
+            for (long i = range.lowerBound; i <= range.upperBound; i++)
+            {
+                if (HasRepeatingPattern(i))
+                {
+                    accumulator += i;
+                }
+            }
+        }
 
         return accumulator;
     }
