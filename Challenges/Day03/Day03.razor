@@ -17,11 +17,12 @@
     string inputData = string.Empty;
     string testData = string.Empty;
     private int? challenge1Result = null;
-    private int? challenge2Result = null;
+    private long? challenge2Result = null;
 
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day3;
     }
 
     protected override async Task OnInitializedAsync()
@@ -34,7 +35,54 @@
         int accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (string batteryBank in parsedInputData)
+        {
+            int firstDigit = -1;
+            int firstDigitIndex = 0;
+
+            // Find the highest digit in the battery bank except for the last value
+            for (int i = 0; i < batteryBank.Length - 1; i++)
+            {
+                char c = batteryBank[i];
+                if (char.IsDigit(c))
+                {
+                    int d = c - '0';
+                    if (d > firstDigit)
+                    {
+                        firstDigit = d;
+                        firstDigitIndex = i;
+                        if (firstDigit == 9)
+                        {
+                            break; // Early exit: cannot get higher than 9
+                        }
+                    }
+                }
+            }
+
+            int secondDigit = -1;
+
+            // Find the highest digit in the battery bank starting at the position after the first digit found
+            for (int i = firstDigitIndex + 1; i < batteryBank.Length; i++)
+            {
+                char c = batteryBank[i];
+                if (char.IsDigit(c))
+                {
+                    int d = c - '0';
+                    if (d > secondDigit)
+                    {
+                        secondDigit = d;
+                        if (secondDigit == 9)
+                        {
+                            break; // Early exit: cannot get higher than 9
+                        }
+                    }
+                }
+            }
+
+            accumulator += int.Parse($"{firstDigit}{secondDigit}");
+        }
 
         return accumulator;
     }
@@ -55,12 +103,47 @@
     }
 
     // Challenge 2
-    private int Challenge2Solution(string input)
+    private long Challenge2Solution(string input)
     {
-        int accumulator = 0;
+        long accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (string batteryBank in parsedInputData)
+        {
+            string batteryBankDigits = string.Empty;
+            int previousHighestDigitIndex = -1;
+
+            for (int b = 1; b <= 12; b++)
+            {
+                int highestDigit = -1;
+                int highestDigitIndex = 0;
+
+                // Find the highest digit in the battery bank except for the last value
+                for (int i = previousHighestDigitIndex + 1; i < batteryBank.Length - (12 - b); i++)
+                {
+                    char c = batteryBank[i];
+                    if (char.IsDigit(c))
+                    {
+                        int d = c - '0';
+                        if (d > highestDigit)
+                        {
+                            highestDigit = d;
+                            highestDigitIndex = i;
+                            previousHighestDigitIndex = i;
+                            if (highestDigit == 9)
+                            {
+                                break; // Early exit: cannot get higher than 9
+                            }
+                        }
+                    }
+                }
+                batteryBankDigits += highestDigit.ToString();
+            }
+
+            accumulator += long.Parse(batteryBankDigits);
+        }
 
         return accumulator;
     }
