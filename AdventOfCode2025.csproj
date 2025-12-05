@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.SassCompiler" Version="1.69.5" />
     <PackageReference Include="MudBlazor" Version="6.11.1" />
   </ItemGroup>
 
