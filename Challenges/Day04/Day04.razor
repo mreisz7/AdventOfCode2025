@@ -22,6 +22,7 @@
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day4;
     }
 
     protected override async Task OnInitializedAsync()
@@ -29,12 +30,115 @@
         await LoadData();
     }
 
+    // Challenge 1
+    // Pseudocode:
+    // - Initialize accumulator.
+    // - Split inputData into lines, trimming and removing empty entries.
+    // - If no lines, return accumulator.
+    // - Determine rows = number of lines; cols = length of first line.
+    // - Create char[,] wrappingPaperRolls with size [rows, cols].
+    // - For each row i:
+    //   - For each column j:
+    //     - Assign wrappingPaperRolls[i, j] = parsedInputData[i][j].
+    // - Continue with rest of method.
+
     private int Challenge1Solution(string input)
     {
         int accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Parse lines into a 2D character array
+        if (parsedInputData.Length == 0)
+        {
+            return accumulator;
+        }
+
+        int rows = parsedInputData.Length;
+        int cols = parsedInputData[0].Length;
+
+        char[,] wrappingPaperRolls = new char[rows, cols];
+
+        for (int i = 0; i < rows; i++)
+        {
+            // Optionally ensure all lines have consistent length; if not, throw or handle
+            if (parsedInputData[i].Length != cols)
+            {
+                throw new InvalidOperationException("Input lines have inconsistent lengths.");
+            }
+
+            for (int j = 0; j < cols; j++)
+            {
+                wrappingPaperRolls[i, j] = parsedInputData[i][j];
+            }
+        }
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                if (wrappingPaperRolls[i, j] == '@')
+                {
+                    int adjacentRolls = 0;
+
+                    // Check the cells around the target cell to count how many '@' exist in the surrounding cells
+
+                    // [i - 1, j - 1]
+                    if (i - 1 >= 0 && j - 1 >= 0 && wrappingPaperRolls[i - 1, j - 1] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    // [i - 1, j]
+                    if (i - 1 >= 0 && wrappingPaperRolls[i - 1, j] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    // [i - 1, j + 1]
+                    if (i - 1 >= 0 && j + 1 < cols && wrappingPaperRolls[i - 1, j + 1] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    // [i, j - 1]
+                    if (j - 1 >= 0 && wrappingPaperRolls[i, j - 1] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    // [i, j + 1]
+                    if (j + 1 < cols && wrappingPaperRolls[i, j + 1] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    // [i + 1, j - 1]
+                    if (i + 1 < rows && j - 1 >= 0 && wrappingPaperRolls[i + 1, j - 1] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    // [i + 1, j]
+                    if (i + 1 < rows && wrappingPaperRolls[i + 1, j] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    // [i + 1, j + 1]
+                    if (i + 1 < rows && j + 1 < cols && wrappingPaperRolls[i + 1, j + 1] == '@')
+                    {
+                        adjacentRolls++;
+                    }
+
+                    if (adjacentRolls < 4)
+                    {
+                        accumulator++;
+                    }
+                }
+            }
+        }
 
         return accumulator;
     }
@@ -60,7 +164,107 @@
         int accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Parse lines into a 2D character array
+        if (parsedInputData.Length == 0)
+        {
+            return accumulator;
+        }
+
+        int rows = parsedInputData.Length;
+        int cols = parsedInputData[0].Length;
+
+        char[,] wrappingPaperRolls = new char[rows, cols];
+
+        for (int i = 0; i < rows; i++)
+        {
+            // Optionally ensure all lines have consistent length; if not, throw or handle
+            if (parsedInputData[i].Length != cols)
+            {
+                throw new InvalidOperationException("Input lines have inconsistent lengths.");
+            }
+
+            for (int j = 0; j < cols; j++)
+            {
+                wrappingPaperRolls[i, j] = parsedInputData[i][j];
+            }
+        }
+
+        int? clearedThisTime = null;
+
+        while (clearedThisTime != 0)
+        {
+            clearedThisTime = 0;
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    if (wrappingPaperRolls[i, j] == '@')
+                    {
+                        int adjacentRolls = 0;
+
+                        // Check the cells around the target cell to count how many '@' exist in the surrounding cells
+
+                        // [i - 1, j - 1]
+                        if (i - 1 >= 0 && j - 1 >= 0 && wrappingPaperRolls[i - 1, j - 1] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        // [i - 1, j]
+                        if (i - 1 >= 0 && wrappingPaperRolls[i - 1, j] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        // [i - 1, j + 1]
+                        if (i - 1 >= 0 && j + 1 < cols && wrappingPaperRolls[i - 1, j + 1] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        // [i, j - 1]
+                        if (j - 1 >= 0 && wrappingPaperRolls[i, j - 1] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        // [i, j + 1]
+                        if (j + 1 < cols && wrappingPaperRolls[i, j + 1] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        // [i + 1, j - 1]
+                        if (i + 1 < rows && j - 1 >= 0 && wrappingPaperRolls[i + 1, j - 1] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        // [i + 1, j]
+                        if (i + 1 < rows && wrappingPaperRolls[i + 1, j] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        // [i + 1, j + 1]
+                        if (i + 1 < rows && j + 1 < cols && wrappingPaperRolls[i + 1, j + 1] == '@')
+                        {
+                            adjacentRolls++;
+                        }
+
+                        if (adjacentRolls < 4)
+                        {
+                            wrappingPaperRolls[i, j] = 'X';
+                            clearedThisTime++;
+                            accumulator++;
+                        }
+                    }
+                }
+            }
+        }
 
         return accumulator;
     }
