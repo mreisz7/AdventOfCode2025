@@ -1,0 +1,47 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider IsDarkMode/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h5" Class="ml-3">Advent of Code 2025</MudText>
+    </MudAppBar>    
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+            <MudNavLink Href="/Day01" Match="NavLinkMatch.All">Day 1</MudNavLink>
+            <MudNavLink Href="/Day02" Match="NavLinkMatch.All">Day 2</MudNavLink>
+            <MudNavLink Href="/Day03" Match="NavLinkMatch.All">Day 3</MudNavLink>
+            <MudNavLink Href="/Day04" Match="NavLinkMatch.All">Day 4</MudNavLink>
+            <MudNavLink Href="/Day05" Match="NavLinkMatch.All">Day 5</MudNavLink>
+            <MudNavLink Href="/Day06" Match="NavLinkMatch.All">Day 6</MudNavLink>
+            <MudNavLink Href="/Day07" Match="NavLinkMatch.All">Day 7</MudNavLink>
+            <MudNavLink Href="/Day08" Match="NavLinkMatch.All">Day 8</MudNavLink>
+            <MudNavLink Href="/Day09" Match="NavLinkMatch.All">Day 9</MudNavLink>
+            <MudNavLink Href="/Day10" Match="NavLinkMatch.All">Day 10</MudNavLink>
+            <MudNavLink Href="/Day11" Match="NavLinkMatch.All">Day 11</MudNavLink>
+            <MudNavLink Href="/Day12" Match="NavLinkMatch.All">Day 12</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

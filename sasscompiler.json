@@ -1,0 +1,13 @@
+{
+    "SourceFolder": "Styles",
+    "TargetFolder": "wwwroot/css",
+    "Arguments": "--style=compressed --no-source-map",
+    "GenerateScopedCss": true,
+    "ScopedCssFolders": ["Components", "Pages", "Layouts"],
+    "IncludePaths": [ "Styles/Modules", "Styles/Components", "Styles/Layouts", "Styles/Pages", "Styles/MedInsight.UI/Components", "Styles/MedInsight.UI/Modules" ],
+    "Configurations": {
+        "Debug": {
+            "Arguments": "--style=expanded --no-source-map"
+        }
+    }
+}

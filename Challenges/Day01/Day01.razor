@@ -1,0 +1,224 @@
+﻿@page "/Day01"
+@page "/Day1"
+@inject DataFetcher dataFetcher
+
+<PageTitle>AoC 2025 - Day @dayNumber</PageTitle>
+
+<ChallengeContainer DayNumber=@dayNumber 
+                    @bind-ChallengeInput=@inputData
+                    @bind-TestInput=@testData
+                    SolveChallenge1=@SolveChallenge1
+                    SolveChallenge2=@SolveChallenge2
+                    Challenge1Result=@challenge1Result.ToString()
+                    Challenge2Result=@challenge2Result.ToString()
+/>
+
+@code {
+    private readonly int dayNumber = 1;
+    string inputData = string.Empty;
+    string testData = string.Empty;
+    private int? challenge1Result = null;
+    private int? challenge2Result = null;
+
+    private async Task LoadData()
+    {
+        inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day1;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private int Challenge1Solution(string input)
+    {
+        int accumulator = 0;
+        int currentPosition = 50;
+
+        // Parse string into an array of strings, each string is a line of the input
+        string[] parsedInputData = inputData.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        Console.WriteLine ($"The dial starts by pointing at {currentPosition}");
+
+        foreach (string instruction in parsedInputData)
+        {
+            // Extract first character from the instruction
+            ReadOnlySpan<char> span = instruction.AsSpan();
+            char direction = span[0];
+
+            // Get everything after the first character and parse the steps
+            int steps = int.Parse(span[1..]);
+
+            switch (direction)
+            {
+                case 'L':
+                    currentPosition -= steps;
+                    break;
+                case 'R':
+                    currentPosition += steps;
+                    break;
+                default:
+                    throw new InvalidOperationException($"Invalid direction character: {direction}");
+            }
+
+            // Wrap around logic
+            while (currentPosition < 0 || currentPosition >= 100)
+            {
+                if (currentPosition < 0)
+                {
+                    currentPosition += 100;
+                }
+                else if (currentPosition >= 100)
+                {
+                    currentPosition -= 100;
+                }
+            }
+
+            Console.WriteLine($"The dials is rotated `{span}` to point at {currentPosition}.");
+
+            if (currentPosition == 0)
+            {
+                accumulator++;
+            }
+        }
+
+        return accumulator;
+    }
+
+    private void SolveChallenge1()
+    {
+        if (inputData != string.Empty)
+        {
+            try
+            {
+                challenge1Result = Challenge1Solution(inputData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
+    // Challenge 2
+    private int Challenge2Solution(string input)
+    {
+        int accumulator = 0;
+        int currentPosition = 50;
+
+        // Parse string into an array of strings, each string is a line of the input
+        string[] parsedInputData = inputData.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        Console.WriteLine($"The dial starts by pointing at {currentPosition}");
+
+        foreach (string instruction in parsedInputData)
+        {
+            // Extract first character from the instruction
+            ReadOnlySpan<char> span = instruction.AsSpan();
+            char direction = span[0];
+            int startingPosition = currentPosition;
+
+            // Get everything after the first character and parse the steps
+            int steps = int.Parse(span[1..]);
+
+            switch (direction)
+            {
+                case 'L':
+                    while (steps >= 100)
+                    {
+                        steps -= 100;
+                        accumulator++;
+                    }
+                    if (steps < currentPosition) 
+                    { 
+                        currentPosition -= steps;
+                        break; 
+                    }
+                    if (currentPosition == 0 && steps == 0) 
+                    {
+                        break;
+                    }
+                    if (steps == currentPosition)
+                    { 
+                        currentPosition = 0; 
+                        accumulator++; 
+                        break;
+                    }
+                    if (currentPosition != 0)
+                    {
+                        accumulator++;
+                    }
+                    currentPosition = currentPosition - steps + 100;
+                    break;
+                case 'R':
+                    while (steps >= 100) { steps -= 100; accumulator++; }
+                    if (currentPosition + steps < 100)
+                    {
+                        currentPosition += steps;
+                        break;
+                    }
+                    if (currentPosition + steps == 100)
+                    {
+                        currentPosition = 0;
+                        accumulator++;
+                        break;
+                    }
+                    accumulator++;
+                    currentPosition = currentPosition + steps - 100;
+                    break;
+                default:
+                    throw new InvalidOperationException($"Invalid direction character: {direction}");
+            }
+
+            // // Wrap around logic
+            // while (currentPosition < 0 || currentPosition >= 100)
+            // {
+            //     if (currentPosition < 0)
+            //     {
+            //         if (startingPosition > 0)
+            //         {
+            //             Console.WriteLine($"Incrementing: Moving from {startingPosition} to {currentPosition}");
+            //             accumulator++;
+            //         }
+            //         currentPosition += 100;
+            //     }
+            //     else if (currentPosition >= 100)
+            //     {
+            //         if ((startingPosition < 100 && startingPosition > 0) || (currentPosition - startingPosition > 100))
+            //         {
+            //             if (currentPosition - 100 != 0)
+            //             {
+            //                 Console.WriteLine($"Incrementing: Moving from {startingPosition} to {currentPosition}");
+            //                 accumulator++;
+            //             }
+            //         }
+            //         currentPosition -= 100;
+            //     }
+            // }
+
+            // if (currentPosition == 0)
+            // {
+            //     Console.WriteLine($"Ending on 0: Moving from {startingPosition} to {currentPosition}");
+            //     accumulator++;
+            // }
+        }
+
+        return accumulator;
+    }
+
+    private void SolveChallenge2()
+    {
+        if (inputData != string.Empty)
+        {
+            try
+            {
+                challenge2Result = Challenge2Solution(inputData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+}

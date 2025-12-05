@@ -1,0 +1,109 @@
+﻿<section class="challenge-container">
+    <div class="challenge-header">
+        <h2 class="header">
+            @($"Day {DayNumber}")
+        </h2>
+        <a href=@($"https://adventofcode.com/2025/day/{DayNumber}") 
+           target="_blank"
+        >
+            Link to the challenge
+        </a>
+    </div>
+    <MudTabs Elevation="2" 
+                Rounded="true" 
+                ApplyEffectsToContainer="true" 
+    >
+        <MudTabPanel Text="Challenge Input">
+            <MudTextField T=string 
+                          @bind-Value=@ChallengeInput 
+                          Lines="24"
+            />
+        </MudTabPanel>
+        <MudTabPanel Text="Test Data">
+            <MudTextField T=string 
+                          @bind-Value=@TestInput
+                          Lines="24"
+            />
+        </MudTabPanel>
+        @if (ThirdTabContent is not null && ThirdTabLabel is not null)
+        {
+            <MudTabPanel Text=@ThirdTabLabel>
+                @ThirdTabContent
+            </MudTabPanel>
+        }
+    </MudTabs>
+    <div class="solution-container">
+        <SolutionViewer ChallengeNumber=1
+                        SolutionMethod=@SolveChallenge1
+                        Solution=@Challenge1Result
+                        Format=@Challenge1Format
+        />
+        <SolutionViewer ChallengeNumber=2
+                        SolutionMethod=@SolveChallenge2
+                        Solution=@Challenge2Result
+                        Format=@Challenge2Format
+        />
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public int DayNumber { get; set; }
+
+    [Parameter, EditorRequired]
+    public string ChallengeInput
+    {
+        get => _challengeInput;
+        set
+        {
+            if (_challengeInput == value) return;
+            _challengeInput = value;
+            ChallengeInputChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<string> ChallengeInputChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public string TestInput
+    {
+        get => _testInput;
+        set
+        {
+            if (_testInput == value) return;
+            _testInput = value;
+            TestInputChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<string> TestInputChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback SolveChallenge1 { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Challenge1Result { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Challenge1Format { get; set; } = null;
+
+    [Parameter, EditorRequired]
+    public EventCallback SolveChallenge2 { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Challenge2Result { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Challenge2Format { get; set; } = null;
+
+    [Parameter]
+    public string? ThirdTabLabel { get; set; } = null;
+
+    [Parameter]
+    public RenderFragment? ThirdTabContent { get; set; } = null;
+
+    private string _challengeInput = string.Empty;
+    private string _testInput = string.Empty;
+}

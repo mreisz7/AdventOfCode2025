@@ -1,0 +1,28 @@
+﻿<div class="solution-viewer">
+    <h3 class="solution-viewer-header">
+        @($"Challenge {ChallengeNumber}")
+    </h3>
+    <div class="solution">
+        @(string.Format(Solution, Format))    
+    </div>
+    <MudButton OnClick=@SolutionMethod
+               Variant=@Variant.Filled
+               Color=@Color.Primary
+    >
+        Solve
+    </MudButton>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int ChallengeNumber { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Solution { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Format { get; set; } = "{0:N0}";
+
+    [Parameter, EditorRequired]
+    public EventCallback SolutionMethod { get; set; }
+}

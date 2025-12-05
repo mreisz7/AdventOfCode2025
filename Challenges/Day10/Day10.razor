@@ -1,0 +1,83 @@
+﻿@page "/Day10"
+@inject DataFetcher dataFetcher
+
+<PageTitle>AoC 2025 - Day @dayNumber</PageTitle>
+
+<ChallengeContainer DayNumber=@dayNumber
+                    @bind-ChallengeInput=@inputData
+                    @bind-TestInput=@testData
+                    SolveChallenge1=@SolveChallenge1
+                    SolveChallenge2=@SolveChallenge2
+                    Challenge1Result=@challenge1Result.ToString()
+                    Challenge2Result=@challenge2Result.ToString()
+                    ThirdTabLabel="Pipe Maze Viewer"
+/>
+
+@code {
+    private readonly int dayNumber = 10;
+    string inputData = string.Empty;
+    string testData = string.Empty;
+    private int? challenge1Result = null;
+    private int? challenge2Result = null;
+
+    private async Task LoadData()
+    {
+        inputData = await dataFetcher.FetchDataAsync(dayNumber);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private int Challenge1Solution(string input)
+    {
+        int accumulator = 0;
+
+        // Parse string into an array of strings, each string is a line of the input
+        string[] parsedInputData = inputData.Split("\n");
+
+        return accumulator;
+    }
+
+    private void SolveChallenge1()
+    {
+        if (inputData != string.Empty)
+        {
+            try
+            {
+                challenge1Result = Challenge1Solution(inputData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
+    // Challenge 2
+    private int Challenge2Solution(string input)
+    {
+        int accumulator = 0;
+
+        // Parse string into an array of strings, each string is a line of the input
+        string[] parsedInputData = inputData.Split("\n");
+
+        return accumulator;
+    }
+
+    private void SolveChallenge2()
+    {
+        if (inputData != string.Empty)
+        {
+            try
+            {
+                challenge2Result = Challenge2Solution(inputData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+}
