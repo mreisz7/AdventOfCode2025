@@ -18,11 +18,12 @@
     string inputData = string.Empty;
     string testData = string.Empty;
     private int? challenge1Result = null;
-    private int? challenge2Result = null;
+    private long? challenge2Result = null;
 
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day5;
     }
 
     protected override async Task OnInitializedAsync()
@@ -36,6 +37,37 @@
 
         // Parse string into an array of strings, each string is a line of the input
         string[] parsedInputData = inputData.Split("\n");
+        List<(long lowerBound, long upperBound)> freshRanges = [];
+        List<long> productIds = [];
+
+        foreach (string line in parsedInputData)
+        {
+            if (line.Contains("-"))
+            {
+                string[] parts = line.Split("-");
+                long lowerBound = long.Parse(parts[0]);
+                long upperBound = long.Parse(parts[1]);
+                freshRanges.Add((lowerBound, upperBound));
+            }
+
+            if (!line.Contains("-") && line.Trim() != string.Empty)
+            {
+                long productId = long.Parse(line.Trim());
+                productIds.Add(productId);
+            }
+        }
+
+        foreach (long productId in productIds)
+        {
+            foreach ((long lowerBound, long upperBound) in freshRanges)
+            {
+                if (productId >= lowerBound && productId <= upperBound)
+                {
+                    accumulator++;
+                    break;
+                }
+            }
+        }
 
         return accumulator;
     }
@@ -56,13 +88,74 @@
     }
 
     // Challenge 2
-    private int Challenge2Solution(string input)
+    private long Challenge2Solution(string input)
     {
-        int accumulator = 0;
+        long accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
         string[] parsedInputData = inputData.Split("\n");
+        List<(long lowerBound, long upperBound)> freshRanges = [];
+        List<(long lowerBound, long upperBound)> deduplicatedFreshRanges = [];
 
+        foreach (string line in parsedInputData)
+        {
+            if (line.Contains("-"))
+            {
+                string[] parts = line.Split("-");
+                long lowerBound = long.Parse(parts[0]);
+                long upperBound = long.Parse(parts[1]);
+                freshRanges.Add((lowerBound, upperBound));
+            }
+        }
+
+        // If no ranges, nothing to deduplicate
+        if (freshRanges.Count == 0)
+        {
+            return accumulator;
+        }
+
+        // Sort ranges by lowerBound, then by upperBound
+        freshRanges.Sort((a, b) =>
+        {
+            int cmp = a.lowerBound.CompareTo(b.lowerBound);
+            if (cmp != 0) return cmp;
+            return a.upperBound.CompareTo(b.upperBound);
+        }); 
+
+        // Merge overlapping ranges to ensure no overlaps in the result
+        long currentLower = freshRanges[0].lowerBound;
+        long currentUpper = freshRanges[0].upperBound;
+
+        for (int i = 1; i < freshRanges.Count; i++)
+        {
+            var (l, u) = freshRanges[i];
+            if (l <= currentUpper) // Overlaps or touches
+            {
+                // Extend current merged range
+                if (u > currentUpper)
+                {
+                    currentUpper = u;
+                }
+            }
+            else
+            {
+                // Close current range and start a new one
+                deduplicatedFreshRanges.Add((currentLower, currentUpper));
+                currentLower = l;
+                currentUpper = u;
+            }
+        }
+
+        // Add the final range
+        deduplicatedFreshRanges.Add((currentLower, currentUpper));
+
+        // Find the number of values in each de-duplicated range
+        foreach ((long lowerBound, long upperBound) range in deduplicatedFreshRanges)
+        {
+            accumulator += ((range.upperBound - range.lowerBound) + 1);
+        }
+
+        // The accumulator can be used later based on deduplicatedFreshRanges
         return accumulator;
     }
 
