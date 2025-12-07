@@ -17,12 +17,13 @@
     private readonly int dayNumber = 6;
     string inputData = string.Empty;
     string testData = string.Empty;
-    private int? challenge1Result = null;
-    private int? challenge2Result = null;
+    private long? challenge1Result = null;
+    private long? challenge2Result = null;
 
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day6;
     }
 
     protected override async Task OnInitializedAsync()
@@ -30,12 +31,47 @@
         await LoadData();
     }
 
-    private int Challenge1Solution(string input)
+    private long Challenge1Solution(string input)
     {
-        int accumulator = 0;
+        long accumulator = 0;
+        List<MathProblem> mathProblems = [];
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (string line in parsedInputData)
+        {
+            // Strip and trim all duplicated spaces from the line
+            string trimmedLine = line.Trim();
+            while (trimmedLine.Contains("  "))
+            {
+                trimmedLine = trimmedLine.Replace("  ", " ");
+            }
+
+            string[] values = trimmedLine.Split(" ");
+            for (int i = 0; i < values.Length; i++)
+            {
+                MathProblem? mathProblem = mathProblems.Find(x => x.ProblemNumber == i);
+                if (mathProblem is null)
+                {
+                    mathProblems.Add(new(i));
+                    mathProblem = mathProblems.Find(x => x.ProblemNumber == i);
+                }
+                if (long.TryParse(values[i], out long number))
+                {
+                    mathProblem!.Numbers.Add(number);
+                }
+                else
+                {
+                    mathProblem!.Operator = values[i];
+                }
+            }
+        }
+
+        foreach (MathProblem problem in mathProblems)
+        {
+            accumulator += problem.Solve();
+        }
 
         return accumulator;
     }
@@ -56,12 +92,60 @@
     }
 
     // Challenge 2
-    private int Challenge2Solution(string input)
+    private long Challenge2Solution(string input)
     {
-        int accumulator = 0;
+        long accumulator = 0;
+        string problemsString = string.Empty;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries);
+
+        for (int i = parsedInputData[0].Length - 1; i >= 0; i--)
+        {
+            string numberAcc = string.Empty;
+            foreach (string line in parsedInputData[0..^1])
+            {
+                numberAcc += line[i];
+            }
+            numberAcc = numberAcc.Trim();
+
+            problemsString += $"{numberAcc} ";
+
+            char mathOperator = parsedInputData[^1][i];
+            if (mathOperator == '*' || mathOperator == '+')
+            {
+                problemsString += $"{mathOperator} ";
+                i--;
+            }
+        }
+
+        string[] problemsArray = problemsString.Split(" ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        List<MathProblem> mathProblems = [];
+        int index = 0;
+
+        foreach (string value in problemsArray)
+        {
+            MathProblem? mathProblem = mathProblems.Find(x => x.ProblemNumber == index);
+            if (mathProblem is null)
+            {
+                mathProblems.Add(new(index));
+                mathProblem = mathProblems.Find(x => x.ProblemNumber == index);
+            }
+            if (long.TryParse(value, out long number))
+            {
+                mathProblem!.Numbers.Add(number);
+            }
+            else
+            {
+                mathProblem!.Operator = value;
+                index++;
+            }
+        }
+
+        foreach (MathProblem problem in mathProblems)
+        {
+            accumulator += problem.Solve();
+        }
 
         return accumulator;
     }
@@ -78,6 +162,38 @@
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+    }
+
+    internal class MathProblem
+    {
+        public int ProblemNumber { get; set; } = -1;
+        public List<long> Numbers { get; set; } = [];
+        public string Operator { get; set; } = string.Empty;
+
+        public MathProblem(int problemNumber)
+        {
+            ProblemNumber = problemNumber;
+        }
+
+        public long Solve()
+        {
+            long result = 0;
+            switch (Operator)
+            {
+                case "+":
+                    result = Numbers.Sum();
+                    Console.WriteLine($"{string.Join(" + ", Numbers.Select(x => x.ToString()))} = {result}");
+                    break;
+                case "*":
+                    result = Numbers.Aggregate((acc, val) => acc * val);
+                    Console.WriteLine($"{string.Join(" x ", Numbers.Select(x => x.ToString()))} = {result}");
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported operator: {Operator}");
+            }
+
+            return result;
         }
     }
 }
