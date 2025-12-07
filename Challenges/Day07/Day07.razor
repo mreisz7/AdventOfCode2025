@@ -181,7 +181,7 @@
             }
         }
 
-        WriteMapToConsole(pathsMap);
+        // WriteMapToConsole(pathsMap);
 
         for (int c = 0; c < cols; c++)
         {
@@ -220,11 +220,25 @@
 
     private void WriteMapToConsole(long[,] map)
     {
+        // Find the max value in the long array
+        long largestNumber = 0;
         for (int r = 0; r < map.GetLength(0); r++)
         {
             for (int c = 0; c < map.GetLength(1); c++)
             {
-                Console.Write(map[r, c].ToString().PadLeft(3) + "");
+                if (map[r, c] > largestNumber)
+                {
+                    largestNumber = map[r, c];
+                }
+            }
+        }
+        int numberOfDigitsToPad = largestNumber.ToString().Length;
+
+        for (int r = 0; r < map.GetLength(0); r++)
+        {
+            for (int c = 0; c < map.GetLength(1); c++)
+            {
+                Console.Write(map[r, c].ToString().PadLeft(numberOfDigitsToPad + 1) + "");
             }
             Console.WriteLine();
         }
