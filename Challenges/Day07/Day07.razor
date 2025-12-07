@@ -18,11 +18,12 @@
     string inputData = string.Empty;
     string testData = string.Empty;
     private int? challenge1Result = null;
-    private int? challenge2Result = null;
+    private long? challenge2Result = null;
 
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day7;
     }
 
     protected override async Task OnInitializedAsync()
@@ -35,7 +36,52 @@
         int accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Parse lines into a 2D character array
+        if (parsedInputData.Length == 0)
+        {
+            throw new FileNotFoundException("No data was provided");
+        }
+
+        int rows = parsedInputData.Length;
+        int cols = parsedInputData[0].Length;
+
+        char[,] splitterMap = new char[rows, cols];
+
+        // Copy the first row into the splitterMap
+        for (int c = 0; c < cols; c++)
+        {
+            splitterMap[0, c] = parsedInputData[0][c];
+        }
+
+        for (int r = 1; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                char precedingChar = splitterMap[r - 1, c];
+                char currentChar = parsedInputData[r][c];
+
+                if ((precedingChar == 'S' || precedingChar == '|') && currentChar == '.')
+                {
+                    splitterMap[r, c] = '|';
+                }
+                else if (precedingChar == '|' && currentChar == '^')
+                {
+                    splitterMap[r, c - 1] = '|';
+                    splitterMap[r, c] = currentChar;
+                    splitterMap[r, c + 1] = '|';
+                    c++;
+                    accumulator++;
+                }
+                else
+                {
+                    splitterMap[r, c] = currentChar;
+                }
+            }
+        }
+
+        WriteMapToConsole(splitterMap);
 
         return accumulator;
     }
@@ -56,12 +102,91 @@
     }
 
     // Challenge 2
-    private int Challenge2Solution(string input)
+    private long Challenge2Solution(string input)
     {
-        int accumulator = 0;
+        long accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Parse lines into a 2D character array
+        if (parsedInputData.Length == 0)
+        {
+            throw new FileNotFoundException("No data was provided");
+        }
+
+        int rows = parsedInputData.Length;
+        int cols = parsedInputData[0].Length;
+
+        char[,] splitterMap = new char[rows, cols];
+
+        // Copy the first row into the splitterMap
+        for (int c = 0; c < cols; c++)
+        {
+            splitterMap[0, c] = parsedInputData[0][c];
+        }
+
+        for (int r = 1; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                char precedingChar = splitterMap[r - 1, c];
+                char currentChar = parsedInputData[r][c];
+
+                if ((precedingChar == 'S' || precedingChar == '|') && currentChar == '.')
+                {
+                    splitterMap[r, c] = '|';
+                }
+                else if (precedingChar == '|' && currentChar == '^')
+                {
+                    splitterMap[r, c - 1] = '|';
+                    splitterMap[r, c] = currentChar;
+                    splitterMap[r, c + 1] = '|';
+                    c++;
+                }
+                else
+                {
+                    splitterMap[r, c] = currentChar;
+                }
+            }
+        }
+
+        long[,] pathsMap = new long[rows, cols];
+
+        for (int r = 1; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                if (parsedInputData[r - 1][c] == 'S')
+                {
+                    pathsMap[r, c] = 1;
+                }
+
+                if (parsedInputData[r][c] == '^')
+                {
+                    continue;
+                }
+
+                if (c - 1 >= 0 && splitterMap[r, c - 1] == '^')
+                {
+                    pathsMap[r, c] += pathsMap[r - 1, c - 1];
+                }
+
+                if (c + 1 < cols && splitterMap[r, c + 1] == '^')
+                {
+                    pathsMap[r, c] += pathsMap[r - 1, c + 1];
+                }
+
+                pathsMap[r, c] += pathsMap[r - 1, c];
+            }
+        }
+
+        WriteMapToConsole(pathsMap);
+
+        for (int c = 0; c < cols; c++)
+        {
+            accumulator += pathsMap[rows - 1, c];
+        }
 
         return accumulator;
     }
@@ -78,6 +203,30 @@
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+    }
+
+    private void WriteMapToConsole(char[,] map)
+    {
+        for (int r = 0; r < map.GetLength(0); r++)
+        {
+            for (int c = 0; c < map.GetLength(1); c++)
+            {
+                Console.Write(map[r, c]);
+            }
+            Console.WriteLine();
+        }
+    }
+
+    private void WriteMapToConsole(long[,] map)
+    {
+        for (int r = 0; r < map.GetLength(0); r++)
+        {
+            for (int c = 0; c < map.GetLength(1); c++)
+            {
+                Console.Write(map[r, c].ToString().PadLeft(3) + "");
+            }
+            Console.WriteLine();
         }
     }
 }
