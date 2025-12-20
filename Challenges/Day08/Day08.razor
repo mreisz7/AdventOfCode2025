@@ -23,6 +23,7 @@
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day8;
     }
 
     protected override async Task OnInitializedAsync()
@@ -35,7 +36,67 @@
         int accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        List<Junction> junctions = [];
+
+        foreach (string coordinates in parsedInputData)
+        {
+            Junction junction = new Junction(coordinates);
+            junctions.Add(junction);
+        }
+
+        HashSet<(double distance, Junction junctionA, Junction junctionB)> junctionDistances = [];
+        foreach (Junction junctionA in junctions)
+        {
+            foreach (Junction junctionB in junctions.Where(j => j != junctionA))
+            {
+                if (junctionDistances.Any(jd => (jd.junctionA == junctionB && jd.junctionB == junctionA)))
+                {
+                    continue;
+                }
+                junctionDistances.Add(junctionA.FindJunctionDistance(junctionB));
+            }
+        }
+
+        junctionDistances = junctionDistances.OrderBy(jd => jd.distance).ToHashSet();
+
+        List<HashSet<Junction>> circuits = [];
+        int numberToTake = (junctions.Count > 20) ? 1000 : 10;
+
+        foreach ((double distance, Junction junctionA, Junction junctionB) in junctionDistances.Take(numberToTake))
+        {
+            HashSet<Junction> newCircuit = [ junctionA, junctionB ];
+            circuits.Add(newCircuit);
+        }
+
+        bool stillConsolidating = true;
+        while (stillConsolidating)
+        {
+            stillConsolidating = false;
+
+            foreach (HashSet<Junction> circuitA in circuits)
+            {
+                foreach (HashSet<Junction> circuitB in circuits.Where(c => c != circuitA))
+                {
+                    if (circuitA.Overlaps(circuitB))
+                    {
+                        HashSet<Junction> mergedCircuit = circuitA.Concat(circuitB).ToHashSet();
+                        circuits.Remove(circuitA);
+                        circuits.Remove(circuitB);
+                        circuits.Add(mergedCircuit);
+                        stillConsolidating = true;
+                        break;
+                    }
+                }
+                if (stillConsolidating)
+                {
+                    break;
+                }
+            }
+        }
+
+        List<int> topCircuitLengths = circuits.Select(c => c.Count).OrderByDescending(c => c).Take(3).ToList();
+        accumulator = topCircuitLengths[0] * topCircuitLengths[1] * topCircuitLengths[2];
 
         return accumulator;
     }
@@ -78,6 +139,48 @@
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+    }
+
+    internal class Junction
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Z { get; set; }
+
+        public Junction(int x, int y, int z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
+        public Junction (string coordinateString)
+        {
+            var parts = coordinateString.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length != 3)
+            {
+                throw new ArgumentException("Invalid coordinate string format.");
+            }
+            X = int.Parse(parts[0]);
+            Y = int.Parse(parts[1]);
+            Z = int.Parse(parts[2]);
+        }
+
+        public double CalculateStraightLineDistance(Junction other)
+        {
+            return Math.Sqrt(Math.Pow(X - other.X, 2) + Math.Pow(Y - other.Y, 2) + Math.Pow(Z - other.Z, 2));
+        }
+
+        public (double distance, Junction junctionA, Junction juntionB) FindJunctionDistance(Junction junctionB)
+        {
+            double distance = CalculateStraightLineDistance(junctionB);
+            return (distance, this, junctionB);
+        }
+
+        public override string ToString()
+        {
+            return $"{X},{Y},{Z}";
         }
     }
 }
