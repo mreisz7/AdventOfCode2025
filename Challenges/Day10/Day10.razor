@@ -23,6 +23,7 @@
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day10;
     }
 
     protected override async Task OnInitializedAsync()
@@ -35,7 +36,18 @@
         int accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.RemoveEmptyEntries);
+
+        List<Machine> machines = [];
+
+        foreach (string machineString in parsedInputData)
+        {
+            Machine machine = new(machineString);
+            machine.CalculateMinimumNumberOfClicks();
+            machines.Add(machine);
+        }
+
+        accumulator = machines.Sum(m => m.MinimumNumberOfClicks);
 
         return accumulator;
     }
@@ -61,7 +73,18 @@
         int accumulator = 0;
 
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.RemoveEmptyEntries);
+
+        List<Machine> machines = [];
+
+        foreach (string machineString in parsedInputData)
+        {
+            Machine machine = new(machineString);
+            machine.CalculateMinimumNumberOfClicksForJoltage();
+            machines.Add(machine);
+        }
+
+        accumulator = machines.Sum(m => m.MinimumNumberOfClicks);
 
         return accumulator;
     }
@@ -77,6 +100,225 @@
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
+    internal class Lights
+    {
+        public int[] Panel { get; init; }
+
+        public Lights(string panelString)
+        {
+            // Strip the first and last character of the string
+            string strippedString = panelString[1..^1];
+            Panel = new int[strippedString.Length];
+            for (int i = 0; i < strippedString.Length; i++)
+            {
+                Panel[i] = (strippedString[i] == '#') ? 1 : 0;
+            }
+        }
+
+        public bool IsEqualTo(int[] buttonSet)
+        {
+            if (buttonSet.Length != Panel.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < Panel.Length; i++)
+            {
+                if (Panel[i] != buttonSet[i] % 2)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    internal class ButtonClickIteration
+    {
+        public int Iterations { get; init; } = 0;
+
+        public int[] ButtonSet { get; init; } = [];
+
+        public ButtonClickIteration() {}
+
+        public ButtonClickIteration(int length)
+        {
+            Iterations = 0;
+            ButtonSet = new int[length];
+        }
+
+        public ButtonClickIteration Iterate(int[] buttonSet)
+        {
+            if (buttonSet.Length != ButtonSet.Length)
+            {
+                throw new ArgumentException("Button set length does not match");
+            }
+
+            ButtonClickIteration newIteration = new()
+            {
+                Iterations = this.Iterations + 1,
+                ButtonSet = new int[ButtonSet.Length]
+            };
+
+            for (int i = 0; i < buttonSet.Length; i++)
+            {
+                newIteration.ButtonSet[i] = this.ButtonSet[i] + buttonSet[i];
+            }
+
+            return newIteration;
+        }
+    }
+
+    internal enum MatchStatus
+    {
+        Matches,
+        TooLow,
+        TooHigh,
+    }
+
+    internal static class ArrayExtension
+    {
+        public static MatchStatus matchStatus(int[] targetArray, int[] checkArray)
+        {
+            if (targetArray.Length != checkArray.Length)
+            {
+                throw new ArgumentException("Array lengths do not match");
+            }
+            bool allMatch = true;
+            for (int i = 0; i < targetArray.Length; i++)
+            {
+                if (checkArray[i] > targetArray[i])
+                {
+                    return MatchStatus.TooHigh;
+                }
+                else if (checkArray[i] < targetArray[i])
+                {
+                    allMatch = false;
+                }
+            }
+            return allMatch ? MatchStatus.Matches : MatchStatus.TooLow;
+        }
+    }
+
+    internal class Machine
+    {
+        public Lights LightsPanel { get; init; } = default!;
+
+        public int[] Joltage { get; init; } = [];
+
+        public List<int[]> ButtonSets { get; init; } = [];
+
+        public List<ButtonClickIteration> ButtonClickIterations { get; init; } = [];
+
+        public int MinimumNumberOfClicks { get; private set; } = int.MaxValue;
+
+        public void CalculateMinimumNumberOfClicks()
+        {
+            HashSet<ButtonClickIteration> visitedStates = [];
+            int iterationCount = 1;
+            foreach (int[] buttonSet in ButtonSets)
+            {
+                if (LightsPanel.IsEqualTo(buttonSet))
+                {
+                    MinimumNumberOfClicks = iterationCount;
+                    return;
+                }
+                ButtonClickIteration buttonClickIteration = new(LightsPanel.Panel.Length);
+                buttonClickIteration = buttonClickIteration.Iterate(buttonSet);
+                visitedStates.Add(buttonClickIteration);
+            }
+            HashSet<ButtonClickIteration> newStates = [];
+            while (MinimumNumberOfClicks == int.MaxValue)
+            {
+                iterationCount++;
+                foreach (ButtonClickIteration currentIteration in visitedStates)
+                {
+                    foreach (int[] buttonSet in ButtonSets)
+                    {
+                        ButtonClickIteration newIteration = currentIteration.Iterate(buttonSet);
+                        if (LightsPanel.IsEqualTo(newIteration.ButtonSet))
+                        {
+                            MinimumNumberOfClicks = newIteration.Iterations;
+                            return;
+                        }
+                        newStates.Add(newIteration);
+                    }
+                }
+                visitedStates = newStates;
+            }
+        }
+
+        public void CalculateMinimumNumberOfClicksForJoltage()
+        {
+            HashSet<ButtonClickIteration> visitedStates = [];
+            int iterationCount = 1;
+            foreach (int[] buttonSet in ButtonSets)
+            {
+                MatchStatus matchStatus = ArrayExtension.matchStatus(Joltage, buttonSet);
+                if (matchStatus == MatchStatus.Matches)
+                {
+                    MinimumNumberOfClicks = iterationCount;
+                    return;
+                }
+                ButtonClickIteration buttonClickIteration = new(LightsPanel.Panel.Length);
+                buttonClickIteration = buttonClickIteration.Iterate(buttonSet);
+                visitedStates.Add(buttonClickIteration);
+            }
+            while (MinimumNumberOfClicks == int.MaxValue)
+            {
+                HashSet<ButtonClickIteration> newStates = [];
+                iterationCount++;
+                foreach (ButtonClickIteration currentIteration in visitedStates)
+                {
+                    foreach (int[] buttonSet in ButtonSets)
+                    {
+                        ButtonClickIteration newIteration = currentIteration.Iterate(buttonSet);
+                        MatchStatus matchStatus = ArrayExtension.matchStatus(Joltage, newIteration.ButtonSet);
+                        if (matchStatus == MatchStatus.Matches)
+                        {
+                            MinimumNumberOfClicks = newIteration.Iterations;
+                            return;
+                        }
+                        if (matchStatus == MatchStatus.TooLow)
+                        {
+                            newStates.Add(newIteration);
+                        }
+                    }
+                }
+                visitedStates = newStates;
+            }
+        }
+
+        public Machine(string input)
+        {
+            string[] splitString = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            LightsPanel = new Lights(splitString[0]);
+
+            Joltage = new int[LightsPanel.Panel.Length];
+
+            for (int i = 1; i < splitString.Length - 1; i++)
+            {
+                string[] buttonString = splitString[i][1..^1].Split(',');
+                int[] buttonSet = new int[LightsPanel.Panel.Length];
+                for (int j = 0; j < buttonString.Length; j++)
+                {
+                    int index = int.Parse(buttonString[j]);
+                    buttonSet[index] = 1;
+                }
+                ButtonSets.Add(buttonSet);
+            }
+
+            string[] joltageString = splitString[^1][1..^1].Split(',');
+            for (int i = 0; i < joltageString.Length; i++)
+            {
+                int index = int.Parse(joltageString[i]);
+                Joltage[i] = index;
             }
         }
     }
