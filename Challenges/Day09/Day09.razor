@@ -17,12 +17,13 @@
     private readonly int dayNumber = 9;
     string inputData = string.Empty;
     string testData = string.Empty;
-    private int? challenge1Result = null;
-    private int? challenge2Result = null;
+    private long? challenge1Result = null;
+    private long? challenge2Result = null;
 
     private async Task LoadData()
     {
         inputData = await dataFetcher.FetchDataAsync(dayNumber);
+        testData = TestData.Day9;
     }
 
     protected override async Task OnInitializedAsync()
@@ -30,14 +31,39 @@
         await LoadData();
     }
 
-    private int Challenge1Solution(string input)
+    private long Challenge1Solution(string input)
     {
-        int accumulator = 0;
-
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        List<Tile> tiles = new();
 
-        return accumulator;
+        foreach (string line in parsedInputData)
+        {
+            string[] coordinates = line.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            Tile tile = new Tile(int.Parse(coordinates[0]), int.Parse(coordinates[1]));
+            tiles.Add(tile);
+        }
+
+        long maxArea = 0;
+        (Tile? tileA, Tile? tileB) maxTiles = (null, null);
+        foreach (Tile tileA in tiles)
+        {
+            foreach (Tile tileB in tiles.Where(t => t != tileA))
+            {
+                long width = (Math.Max(tileA.X, tileB.X) - Math.Min(tileA.X, tileB.X)) + 1;
+                long height = (Math.Max(tileA.Y, tileB.Y) - Math.Min(tileA.Y, tileB.Y)) + 1;
+                long area = width * height;
+                if (area > maxArea)
+                {
+                    maxArea = area;
+                    maxTiles = (tileA, tileB);
+                }
+            }
+        }
+
+        Console.WriteLine($"MAX: ({maxTiles.tileA} - {maxTiles.tileB})");
+
+        return maxArea;
     }
 
     private void SolveChallenge1()
@@ -56,14 +82,104 @@
     }
 
     // Challenge 2
-    private int Challenge2Solution(string input)
+    private long Challenge2Solution(string input)
     {
-        int accumulator = 0;
-
         // Parse string into an array of strings, each string is a line of the input
-        string[] parsedInputData = inputData.Split("\n");
+        string[] parsedInputData = inputData.Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        List<Tile> tiles = new();
 
-        return accumulator;
+        foreach (string line in parsedInputData)
+        {
+            string[] coordinates = line.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            Tile tile = new Tile(int.Parse(coordinates[0]), int.Parse(coordinates[1]));
+            tiles.Add(tile);
+        }
+
+        // Fill in the gaps between tiles
+        // D -> Y + 1
+        // U -> Y - 1
+        // L -> X - 1
+        // R -> X + 1
+        List<Tile> greenTiles = [];
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            int steps = 0;
+            char direction = 'd';
+            int iNext = (i + 1) % tiles.Count;
+            if (tiles[i].X == tiles[iNext].X)
+            {
+                steps = (Math.Max(tiles[i].Y, tiles[iNext].Y) - Math.Min(tiles[i].Y, tiles[iNext].Y));
+                direction = tiles[i].Y > tiles[iNext].Y ? 'U' : 'D';
+            }
+            if (tiles[i].Y == tiles[iNext].Y)
+            {
+                steps = (Math.Max(tiles[i].X, tiles[iNext].X) - Math.Min(tiles[i].X, tiles[iNext].X));
+                direction = tiles[i].X < tiles[iNext].X ? 'R' : 'L';
+            }
+
+            for (int s = 1; s < steps; s++)
+            {
+                Tile newTile;
+                switch (direction)
+                {
+                    case 'U':
+                        newTile = new Tile(tiles[i].X, tiles[i].Y - s, 'G');
+                        break;
+                    case 'D':
+                        newTile = new Tile(tiles[i].X, tiles[i].Y + s, 'G');
+                        break;
+                    case 'R':
+                        newTile = new Tile(tiles[i].X + s, tiles[i].Y, 'G');
+                        break;
+                    case 'L':
+                        newTile = new Tile(tiles[i].X - s, tiles[i].Y, 'G');
+                        break;
+                    default:
+                        throw new Exception("Invalid direction");
+                }
+                greenTiles.Add(newTile);
+            }
+        }
+        tiles.AddRange(greenTiles);
+
+        long maxArea = 0;
+        List<(Tile tileA, Tile tileB)> failedCombinationList = [];
+        (Tile? tileA, Tile? tileB) maxTiles = (null, null);
+        foreach (Tile tileA in tiles.Where(t => t.Color == 'R'))
+        {
+            foreach (Tile tileB in tiles.Where(t => t.Color == 'R' && t != tileA))
+            {
+                if (failedCombinationList.Contains((tileB, tileA)))
+                {
+                    continue;
+                }
+
+                Tile oppositeCornerA = new Tile(tileA.X, tileB.Y);
+                Tile oppositeCornerB = new Tile(tileB.X, tileA.Y);
+
+                if (TileIsSurrounded(oppositeCornerA, tiles) &&
+                    TileIsSurrounded(oppositeCornerB, tiles))
+                {
+                    long width = (Math.Max(tileA.X, tileB.X) - Math.Min(tileA.X, tileB.X)) + 1;
+                    long height = (Math.Max(tileA.Y, tileB.Y) - Math.Min(tileA.Y, tileB.Y)) + 1;
+                    long area = width * height;
+
+                    if (area > maxArea)
+                    {
+                        maxArea = area;
+                        failedCombinationList.Add((maxTiles.tileA!, maxTiles.tileB!));
+                        maxTiles = (tileA, tileB);
+                    }
+                } else
+                {
+                    failedCombinationList.Add((tileA, tileB));
+                }
+            }
+        }
+
+        Console.WriteLine($"MAX: {maxTiles.tileA} - {maxTiles.tileB}");
+
+        return maxArea;
     }
 
     private void SolveChallenge2()
@@ -78,6 +194,23 @@
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+    }
+
+    private bool TileIsSurrounded(Tile tile, List<Tile> tiles)
+    {
+        bool up = tiles.Any(t => t.X == tile.X && t.Y <= tile.Y);
+        bool down = tiles.Any(t => t.X == tile.X && t.Y >= tile.Y);
+        bool left = tiles.Any(t => t.X <= tile.X && t.Y == tile.Y);
+        bool right = tiles.Any(t => t.X >= tile.X && t.Y == tile.Y);
+        return up && down && left && right;
+    }
+
+    internal record Tile(int X, int Y, char Color = 'R')
+    {
+        public override string ToString()
+        {
+            return $"({X}, {Y})";
         }
     }
 }
